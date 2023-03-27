@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:sec="http://www.springframework.org/schema/security"
+    xsi:schemaLocation="http://www.springframework.org/schema/security https://www.springframework.org/schema/security/spring-security.xsd
+                        http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+                        ">
+
+    <sec:http pattern="/resources/**" security="none" />
+    <sec:http>
+        <sec:intercept-url pattern="/secured" access="isAuthenticated()" />
+        <sec:oauth2-login authorized-client-repository-ref="authorizedClientRepository" />
+        <sec:access-denied-handler ref="accessDeniedHandler" />
+        <sec:custom-filter ref="userIdMDCPutFilter" after="ANONYMOUS_FILTER" />
+        <sec:session-management />
+    </sec:http>
+
+    <sec:client-registrations>
+        <sec:client-registration registration-id="keycloak"
+            client-id="sample-spring-app"
+            client-secret="5bDKXZefANr3Zoq9f16NfWIHjSEsvkAU"
+            authorization-grant-type="authorization_code"
+            scope="openid,profile"
+            redirect-uri="{baseUrl}/login/oauth2/code/{registrationId}"
+            provider-id="keycloak" />
+        <sec:provider provider-id="keycloak"
+            authorization-uri="http://localhost:8080/realms/sample1/protocol/openid-connect/auth"
+            token-uri="http://localhost:8080/realms/sample1/protocol/openid-connect/token"
+            user-info-uri="http://localhost:8080/realms/sample1/protocol/openid-connect/userinfo"
+            jwk-set-uri="http://localhost:8080/realms/sample1/protocol/openid-connect/certs"
+            user-info-user-name-attribute="preferred_username" />
+    </sec:client-registrations>
+
+    <bean id="authorizedClientService"
+        class="org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService"
+        autowire="constructor" />
+
+    <bean id="authorizedClientRepository"
+        class="org.springframework.security.oauth2.client.web.AuthenticatedPrincipalOAuth2AuthorizedClientRepository">
+        <constructor-arg ref="authorizedClientService" />
+    </bean>
+
+    <sec:authentication-manager />
+
+    <!-- CSRF Protection -->
+    <bean id="accessDeniedHandler"
+        class="org.springframework.security.web.access.DelegatingAccessDeniedHandler">
+        <constructor-arg index="0">
+            <map>
+                <entry
+                    key="org.springframework.security.web.csrf.InvalidCsrfTokenException">
+                    <bean
+                        class="org.springframework.security.web.access.AccessDeniedHandlerImpl">
+                        <property name="errorPage"
+                            value="/WEB-INF/views/common/error/invalidCsrfTokenError.jsp" />
+                    </bean>
+                </entry>
+                <entry
+                    key="org.springframework.security.web.csrf.MissingCsrfTokenException">
+                    <bean
+                        class="org.springframework.security.web.access.AccessDeniedHandlerImpl">
+                        <property name="errorPage"
+                            value="/WEB-INF/views/common/error/missingCsrfTokenError.jsp" />
+                    </bean>
+                </entry>
+            </map>
+        </constructor-arg>
+        <constructor-arg index="1">
+            <bean
+                class="org.springframework.security.web.access.AccessDeniedHandlerImpl">
+                <property name="errorPage"
+                    value="/WEB-INF/views/common/error/accessDeniedError.jsp" />
+            </bean>
+        </constructor-arg>
+    </bean>
+
+    <!-- Put UserID into MDC -->
+    <bean id="userIdMDCPutFilter" class="org.terasoluna.gfw.security.web.logging.UserIdMDCPutFilter">
+    </bean>
+
+</beans>
