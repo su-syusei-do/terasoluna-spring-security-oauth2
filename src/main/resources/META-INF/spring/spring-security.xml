@@ -24,10 +24,7 @@
             redirect-uri="{baseUrl}/login/oauth2/code/{registrationId}"
             provider-id="keycloak" />
         <sec:provider provider-id="keycloak"
-            authorization-uri="http://localhost:8080/realms/sample1/protocol/openid-connect/auth"
-            token-uri="http://localhost:8080/realms/sample1/protocol/openid-connect/token"
-            user-info-uri="http://localhost:8080/realms/sample1/protocol/openid-connect/userinfo"
-            jwk-set-uri="http://localhost:8080/realms/sample1/protocol/openid-connect/certs"
+            issuer-uri="http://localhost:8080/realms/sample1"
             user-info-user-name-attribute="preferred_username" />
     </sec:client-registrations>
 
