@@ -3,6 +3,7 @@ package com.example.app.welcome;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Base64;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,8 @@ import org.springframework.security.oauth2.client.authentication.*;
 
 import org.apache.commons.lang3.builder.*;
 import org.springframework.security.core.context.*;
+import org.springframework.security.oauth2.core.*;
+import org.springframework.security.oauth2.client.*;
 
 /**
  * Handles requests for the application home page.
@@ -23,6 +26,12 @@ public class HelloController {
 
     private static final Logger logger = LoggerFactory
             .getLogger(HelloController.class);
+    
+    private final OAuth2AuthorizedClientService clientService;
+    
+    public HelloController(OAuth2AuthorizedClientSerivce clientService) {
+        this.clientService = clientService;
+    }
 
     /**
      * Simply selects the home view to render by returning its name.
@@ -50,6 +59,17 @@ public class HelloController {
 
         SecurityContext context = SecurityContextHolder.getContext();
         model.addAttribute("context", ToStringBuilder.reflectionToString(context, ToStringStyle.MULTI_LINE_STYLE));
+        
+        if (clientService != null) {
+            OAuth2AuthorizedClient authClient = clientService.loadAuthorizedClient(token.getAuthorizedClientRegistrationId(), token.getName());
+            String tokenValue = authClient.getAccessToken().getTokenValue();
+            String[] chunks = tokenValue.split("\\.");
+            
+            Base64.Decoder decoder = Base64.getUrlDecoder();
+            String payload = new String(decoder.decode(chunks[1]));
+            
+            model.addAttribute("accessToken", payload);
+        }
         return "welcome/secured";
     }
 }
