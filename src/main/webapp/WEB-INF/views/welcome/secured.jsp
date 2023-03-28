@@ -10,6 +10,7 @@
         <h1>Secured</h1>
         <textarea cols="100" rows="10">${token}</textarea>
         <textarea cols="100" rows="10">${context}</textarea>
+        <textarea cols="100" rows="10">${accessToken}</textarea>
     </div>
 </body>
 </html>
